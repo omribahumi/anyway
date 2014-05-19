@@ -52,7 +52,15 @@ def markers(methods=["GET", "POST"]):
             results = Marker.bounding_box_fetch(ne_lat, ne_lng, sw_lat, sw_lng)
             logging.debug('serializing markers')
             markers = [marker.serialize() for marker in results.all()]
-        return make_response(json.dumps(markers))
+
+        if request.values.get('format') == 'csv':
+            output_file = StringIO.StringIO()
+            output = csv.DictWriter(output_file, markers[0].keys)
+            output.writerows(markers)
+
+            return make_response(output_file.getvalue())
+        else: # defaults to json
+            return make_response(json.dumps(markers))
 
     else:
         data = json.loads(self.request.body)
