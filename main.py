@@ -3,6 +3,8 @@ import logging
 import json
 import urllib
 import jinja2
+import csv
+import StringIO
 
 from flask import Flask, request, make_response
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -55,10 +57,19 @@ def markers(methods=["GET", "POST"]):
 
         if request.values.get('format') == 'csv':
             output_file = StringIO.StringIO()
-            output = csv.DictWriter(output_file, markers[0].keys)
-            output.writerows(markers)
+            output = csv.DictWriter(output_file, markers[0].keys())
 
-            return make_response(output_file.getvalue())
+            output.writeheader()
+            for marker in markers:
+                row = {k: v.encode('utf8')
+                       if type(v) is unicode else v
+                       for k, v in marker.iteritems()}
+
+                output.writerow(row)
+
+            return make_response((output_file.getvalue(),
+                'test',
+                {u'Content-Disposition', u'attachment; filename="data.csv"'}))
         else: # defaults to json
             return make_response(json.dumps(markers))
 
