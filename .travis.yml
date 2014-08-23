@@ -1,0 +1,1 @@
+after_success: (cd travis-deployment/ && git pull && git checkout master) && ./travis-deployment/after_success.sh
